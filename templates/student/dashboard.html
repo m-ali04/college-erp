@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard — College ERP{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="welcome-banner student-banner">
+    <div class="welcome-banner-animation">
+        <dotlottie-player src="{{ url_for('static', filename='dotlot/std.lottie') }}" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></dotlottie-player>
+    </div>
+    <div class="welcome-banner-text">
+        <h1>Welcome, {{ student.full_name }}!</h1>
+        <p>{{ student.roll_no or 'N/A' }} — {{ student.department or 'N/A' }} (Section {{ student.section or '—' }})</p>
+    </div>
+</div>
+
+<!-- Student Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon info"><i class="fas fa-book"></i></div>
+        <div class="stat-info"><h3>{{ course_count }}</h3><p>Enrolled Courses</p></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-info">
+            <h3>{{ attendance.present or 0 }}/{{ attendance.total or 0 }}</h3>
+            <p>Classes Attended</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning"><i class="fas fa-percentage"></i></div>
+        <div class="stat-info">
+            <h3>{% if attendance.total %}{{ ((attendance.present / attendance.total) * 100)|round(1) }}%{% else %}N/A{% endif %}</h3>
+            <p>Attendance Rate</p>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Progress -->
+{% if attendance.total %}
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-chart-pie"></i> Attendance Overview</h2></div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+            <div class="flex-between mb-1">
+                <span style="font-size:.85rem">Present</span>
+                <span class="badge badge-present">{{ attendance.present }}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill success" style="width:{{ (attendance.present / attendance.total * 100)|round }}%"></div></div>
+        </div>
+        <div style="flex:1;min-width:200px">
+            <div class="flex-between mb-1">
+                <span style="font-size:.85rem">Late</span>
+                <span class="badge badge-late">{{ attendance.late }}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill warning" style="width:{{ (attendance.late / attendance.total * 100)|round }}%"></div></div>
+        </div>
+        <div style="flex:1;min-width:200px">
+            <div class="flex-between mb-1">
+                <span style="font-size:.85rem">Absent</span>
+                <span class="badge badge-absent">{{ attendance.absent }}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill danger" style="width:{{ (attendance.absent / attendance.total * 100)|round }}%"></div></div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Announcements -->
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-bullhorn"></i> Recent Announcements</h2></div>
+    {% if announcements %}
+    <div class="announcement-list">
+        {% for a in announcements %}
+        <div class="announcement-card">
+            <div class="meta">
+                <span><i class="fas fa-user"></i> {{ a.poster_name }}</span>
+                <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y') }}</span>
+                {% if a.course_code %}<span class="course-tag"><i class="fas fa-book"></i> {{ a.course_code }}</span>
+                {% else %}<span class="course-tag"><i class="fas fa-globe"></i> System</span>{% endif %}
+            </div>
+            <h3>{{ a.title }}</h3>
+            <p class="body">{{ a.body }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements.</p></div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+{% endblock %}

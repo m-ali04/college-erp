@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Mark Attendance — College ERP{% endblock %}
+{% block page_title %}Mark Attendance{% endblock %}
+{% block content %}
+
+<!-- Filter bar -->
+<form class="filter-bar" method="GET" action="{{ url_for('teacher.attendance') }}">
+    <div class="form-group">
+        <label>Course</label>
+        <select name="course_id" required onchange="this.form.submit()">
+            <option value="">Select Course</option>
+            {% for c in courses %}
+            <option value="{{ c.course_id }}" {% if selected_course == c.course_id|string %}selected{% endif %}>{{ c.course_code }} — {{ c.course_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date" value="{{ selected_date }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Load Students</button>
+</form>
+
+{% if students %}
+<form method="POST" action="{{ url_for('teacher.attendance') }}">
+    <input type="hidden" name="course_id" value="{{ selected_course }}">
+    <input type="hidden" name="date" value="{{ selected_date }}">
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fas fa-calendar-check"></i> Students ({{ students|length }})</h2>
+            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save Attendance</button>
+        </div>
+        <div class="attendance-grid">
+            {% for s in students %}
+            <div class="attendance-row">
+                <input type="hidden" name="enrollment_ids" value="{{ s.enrollment_id }}">
+                <span class="roll-no">{{ s.roll_no or '—' }}</span>
+                <span class="student-name">{{ s.full_name }}</span>
+                <span class="text-muted" style="width:60px">{{ s.section or '' }}</span>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" name="status_{{ s.enrollment_id }}" id="p_{{ s.enrollment_id }}" value="present" {% if s.existing_status == 'present' %}checked{% endif %} required>
+                        <label for="p_{{ s.enrollment_id }}" class="present">Present</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="status_{{ s.enrollment_id }}" id="a_{{ s.enrollment_id }}" value="absent" {% if s.existing_status == 'absent' %}checked{% endif %}>
+                        <label for="a_{{ s.enrollment_id }}" class="absent">Absent</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="status_{{ s.enrollment_id }}" id="l_{{ s.enrollment_id }}" value="late" {% if s.existing_status == 'late' %}checked{% endif %}>
+                        <label for="l_{{ s.enrollment_id }}" class="late">Late</label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</form>
+{% elif selected_course and selected_date %}
+<div class="card"><div class="empty-state"><i class="fas fa-users"></i><p>No students enrolled in this course.</p></div></div>
+{% endif %}
+{% endblock %}

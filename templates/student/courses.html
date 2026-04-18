@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}My Courses — College ERP{% endblock %}
+{% block page_title %}My Courses{% endblock %}
+{% block content %}
+{% if courses %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-book"></i> Enrolled Courses ({{ courses|length }})</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Code</th><th>Name</th><th>Credits</th><th>Department</th><th>Teacher</th><th>Semester</th><th>Year</th></tr></thead>
+            <tbody>
+            {% for c in courses %}
+            <tr>
+                <td><strong>{{ c.course_code }}</strong></td>
+                <td>{{ c.course_name }}</td>
+                <td>{{ c.credit_hours }}</td>
+                <td>{{ c.department or '—' }}</td>
+                <td>{{ c.teacher_name or '—' }}</td>
+                <td>{{ c.semester }}</td>
+                <td>{{ c.academic_year }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-book"></i><p>You are not enrolled in any courses yet.</p></div></div>
+{% endif %}
+{% endblock %}

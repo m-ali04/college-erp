@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}My Fees — College ERP{% endblock %}
+{% block page_title %}My Fees Overview{% endblock %}
+{% block content %}
+
+<!-- Financial Stats Grid -->
+<div class="stats-grid mb-3">
+    <div class="stat-card" style="border-color:var(--danger-border);background:var(--danger-bg)">
+        <div class="stat-icon danger"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="stat-info">
+            <h3 style="color:var(--danger)">Rs.{{ "%.2f"|format(total_outstanding) }}</h3>
+            <p>Total Outstanding</p>
+        </div>
+    </div>
+    <div class="stat-card" style="border-color:var(--success-border);background:var(--success-bg)">
+        <div class="stat-icon success"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+            <h3 style="color:var(--success)">Rs.{{ "%.2f"|format(total_paid) }}</h3>
+            <p>Total Paid</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-file-invoice"></i> My Invoices</h2></div>
+    {% if fees %}
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Fee Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Payment Date</th><th>Action</th></tr></thead>
+            <tbody>
+            {% for f in fees %}
+            <tr>
+                <td><strong>{{ f.fee_type }}</strong></td>
+                <td>Rs.{{ "%.2f"|format(f.amount) }}</td>
+                <td>{{ f.due_date.strftime('%b %d, %Y') }}</td>
+                <td>
+                    {% if f.status == 'paid' %}
+                        <span class="badge badge-present">Paid</span>
+                    {% elif f.status == 'pending' %}
+                        <span class="badge badge-warning" style="background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)">Pending</span>
+                    {% else %}
+                        <span class="badge badge-absent">Overdue</span>
+                    {% endif %}
+                </td>
+                <td>{{ f.payment_date.strftime('%b %d, %Y') if f.payment_date else '—' }}</td>
+                <td>
+                    {% if f.status != 'paid' %}
+                    <form method="POST" action="{{ url_for('student.simulate_payment', fee_id=f.fee_id) }}">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-credit-card"></i> Pay Now</button>
+                    </form>
+                    {% else %}
+                    <span class="text-muted"><i class="fas fa-check"></i> Cleared</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <p>You have no current fee records.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

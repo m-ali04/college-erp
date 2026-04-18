@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}My Attendance — College ERP{% endblock %}
+{% block page_title %}Attendance Summary{% endblock %}
+{% block content %}
+{% if attendance_data %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-calendar-check"></i> Attendance Per Course</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Course</th><th>Present</th><th>Late</th><th>Absent</th><th>Total</th><th>Rate</th><th>Progress</th></tr></thead>
+            <tbody>
+            {% for d in attendance_data %}
+            {% set pct = ((d.present_count / d.total_classes) * 100)|round(1) if d.total_classes else 0 %}
+            <tr>
+                <td><strong>{{ d.course_code }}</strong><br><small class="text-muted">{{ d.course_name }}</small></td>
+                <td><span class="badge badge-present">{{ d.present_count }}</span></td>
+                <td><span class="badge badge-late">{{ d.late_count }}</span></td>
+                <td><span class="badge badge-absent">{{ d.absent_count }}</span></td>
+                <td>{{ d.total_classes }}</td>
+                <td><strong>{{ pct }}%</strong></td>
+                <td style="min-width:120px">
+                    <div class="progress-bar">
+                        <div class="progress-fill {% if pct >= 75 %}success{% elif pct >= 50 %}warning{% else %}danger{% endif %}" style="width:{{ pct }}%"></div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-calendar"></i><p>No attendance records found.</p></div></div>
+{% endif %}
+{% endblock %}

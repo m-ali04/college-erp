@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Announcements — College ERP{% endblock %}
+{% block page_title %}Announcements{% endblock %}
+{% block content %}
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-bullhorn"></i> Post System-Wide Announcement</h2></div>
+    <form method="POST" action="{{ url_for('admin.create_announcement') }}">
+        <div class="form-grid">
+            <div class="form-group full-width"><label>Title *</label><input type="text" name="title" required placeholder="Announcement title"></div>
+            <div class="form-group full-width"><label>Body *</label><textarea name="body" required placeholder="Write your announcement here..."></textarea></div>
+        </div>
+        <div class="mt-2"><button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Post</button></div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> All Announcements</h2></div>
+    {% if announcements %}
+    <div class="announcement-list">
+        {% for a in announcements %}
+        <div class="announcement-card">
+            <div class="meta">
+                <span><i class="fas fa-user"></i> {{ a.poster_name }}</span>
+                <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                {% if a.course_code %}<span class="course-tag"><i class="fas fa-book"></i> {{ a.course_code }}</span>
+                {% else %}<span class="course-tag"><i class="fas fa-globe"></i> System-wide</span>{% endif %}
+            </div>
+            <h3>{{ a.title }}</h3>
+            <p class="body">{{ a.body }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements posted yet.</p></div>
+    {% endif %}
+</div>
+{% endblock %}

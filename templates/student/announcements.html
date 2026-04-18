@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Announcements — College ERP{% endblock %}
+{% block page_title %}Announcements{% endblock %}
+{% block content %}
+{% if announcements %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-bullhorn"></i> All Announcements</h2></div>
+    <div class="announcement-list">
+        {% for a in announcements %}
+        <div class="announcement-card">
+            <div class="meta">
+                <span><i class="fas fa-user"></i> {{ a.poster_name }}</span>
+                <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                {% if a.course_code %}<span class="course-tag"><i class="fas fa-book"></i> {{ a.course_code }}</span>
+                {% else %}<span class="course-tag"><i class="fas fa-globe"></i> System-wide</span>{% endif %}
+            </div>
+            <h3>{{ a.title }}</h3>
+            <p class="body">{{ a.body }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements to display.</p></div></div>
+{% endif %}
+{% endblock %}

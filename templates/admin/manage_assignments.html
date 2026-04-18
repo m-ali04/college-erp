@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Course Assignments — College ERP{% endblock %}
+{% block page_title %}Course Assignments{% endblock %}
+{% block content %}
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-chalkboard-teacher"></i> Assign Teacher to Course</h2></div>
+    <form method="POST" action="{{ url_for('admin.create_assignment') }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Teacher *</label>
+                <select name="teacher_id" required>
+                    <option value="">Select Teacher</option>
+                    {% for t in teachers %}<option value="{{ t.teacher_id }}">{{ t.employee_code or 'N/A' }} — {{ t.full_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Course *</label>
+                <select name="course_id" required>
+                    <option value="">Select Course</option>
+                    {% for c in courses %}<option value="{{ c.course_id }}">{{ c.course_code }} — {{ c.course_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Semester *</label><input type="text" name="semester" required placeholder="e.g. Fall"></div>
+            <div class="form-group"><label>Academic Year *</label><input type="text" name="academic_year" required placeholder="e.g. 2025-26"></div>
+        </div>
+        <div class="mt-2"><button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Assign</button></div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> All Assignments ({{ assignments|length }})</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Teacher</th><th>Emp Code</th><th>Course</th><th>Semester</th><th>Year</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for a in assignments %}
+            <tr>
+                <td>{{ a.full_name }}</td>
+                <td>{{ a.employee_code or '—' }}</td>
+                <td>{{ a.course_code }} — {{ a.course_name }}</td>
+                <td>{{ a.semester }}</td>
+                <td>{{ a.academic_year }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.delete_assignment', assignment_id=a.assignment_id) }}" style="display:inline">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this.parentElement, 'assignment')"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

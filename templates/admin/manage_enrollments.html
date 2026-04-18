@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Manage Enrollments — College ERP{% endblock %}
+{% block page_title %}Manage Enrollments{% endblock %}
+{% block content %}
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-user-plus"></i> Enroll Student in Course</h2></div>
+    <form method="POST" action="{{ url_for('admin.create_enrollment') }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Student *</label>
+                <select name="student_id" required>
+                    <option value="">Select Student</option>
+                    {% for s in students %}<option value="{{ s.student_id }}">{{ s.roll_no or 'N/A' }} — {{ s.full_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Course *</label>
+                <select name="course_id" required>
+                    <option value="">Select Course</option>
+                    {% for c in courses %}<option value="{{ c.course_id }}">{{ c.course_code }} — {{ c.course_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Semester *</label><input type="text" name="semester" required placeholder="e.g. Fall"></div>
+            <div class="form-group"><label>Academic Year *</label><input type="text" name="academic_year" required placeholder="e.g. 2025-26"></div>
+        </div>
+        <div class="mt-2"><button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Enroll</button></div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> All Enrollments ({{ enrollments|length }})</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Student</th><th>Roll No</th><th>Course</th><th>Semester</th><th>Year</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for e in enrollments %}
+            <tr>
+                <td>{{ e.full_name }}</td>
+                <td>{{ e.roll_no or '—' }}</td>
+                <td>{{ e.course_code }} — {{ e.course_name }}</td>
+                <td>{{ e.semester }}</td>
+                <td>{{ e.academic_year }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.delete_enrollment', enrollment_id=e.enrollment_id) }}" style="display:inline">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this.parentElement, 'enrollment')"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

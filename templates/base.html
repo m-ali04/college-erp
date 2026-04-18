@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="College ERP — Learning Management System">
+    <title>{% block title %}College ERP{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if(savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    </script>
+</head>
+<body>
+{% if session.get('user_id') %}
+<div class="app-layout">
+    <!-- ======== Sidebar ======== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><i class="fas fa-graduation-cap"></i><span>College ERP</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            {% set ep = request.endpoint %}
+
+            {% if session.get('role') == 'admin' %}
+            <div class="nav-section-title">Main</div>
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if ep=='admin.dashboard' %}active{% endif %}"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <div class="nav-section-title">Management</div>
+            <a href="{{ url_for('admin.manage_users') }}" class="nav-item {% if ep in ('admin.manage_users','admin.edit_user') %}active{% endif %}"><i class="fas fa-users"></i><span>Users</span></a>
+            <a href="{{ url_for('admin.manage_courses') }}" class="nav-item {% if ep=='admin.manage_courses' %}active{% endif %}"><i class="fas fa-book"></i><span>Courses</span></a>
+            <a href="{{ url_for('admin.manage_enrollments') }}" class="nav-item {% if ep=='admin.manage_enrollments' %}active{% endif %}"><i class="fas fa-user-graduate"></i><span>Enrollments</span></a>
+            <a href="{{ url_for('admin.manage_assignments') }}" class="nav-item {% if ep=='admin.manage_assignments' %}active{% endif %}"><i class="fas fa-chalkboard-teacher"></i><span>Course Assignments</span></a>
+            <div class="nav-section-title">Communication</div>
+            <a href="{{ url_for('admin.announcements') }}" class="nav-item {% if ep=='admin.announcements' %}active{% endif %}"><i class="fas fa-bullhorn"></i><span>Announcements</span></a>
+            <div class="nav-section-title">Finance</div>
+            <a href="{{ url_for('admin.manage_fees') }}" class="nav-item {% if ep=='admin.manage_fees' %}active{% endif %}"><i class="fas fa-file-invoice-dollar"></i><span>Manage Fees</span></a>
+
+            {% elif session.get('role') == 'teacher' %}
+            <div class="nav-section-title">Main</div>
+            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item {% if ep=='teacher.dashboard' %}active{% endif %}"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <div class="nav-section-title">Academic</div>
+            <a href="{{ url_for('teacher.attendance') }}" class="nav-item {% if ep=='teacher.attendance' %}active{% endif %}"><i class="fas fa-calendar-check"></i><span>Attendance</span></a>
+            <a href="{{ url_for('teacher.marks') }}" class="nav-item {% if ep=='teacher.marks' %}active{% endif %}"><i class="fas fa-chart-bar"></i><span>Marks Entry</span></a>
+            <div class="nav-section-title">Communication</div>
+            <a href="{{ url_for('teacher.announcements') }}" class="nav-item {% if ep=='teacher.announcements' %}active{% endif %}"><i class="fas fa-bullhorn"></i><span>Announcements</span></a>
+
+            {% elif session.get('role') == 'student' %}
+            <div class="nav-section-title">Main</div>
+            <a href="{{ url_for('student.dashboard') }}" class="nav-item {% if ep=='student.dashboard' %}active{% endif %}"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <div class="nav-section-title">Academic</div>
+            <a href="{{ url_for('student.courses') }}" class="nav-item {% if ep=='student.courses' %}active{% endif %}"><i class="fas fa-book"></i><span>My Courses</span></a>
+            <a href="{{ url_for('student.attendance') }}" class="nav-item {% if ep=='student.attendance' %}active{% endif %}"><i class="fas fa-calendar-check"></i><span>Attendance</span></a>
+            <a href="{{ url_for('student.marks') }}" class="nav-item {% if ep=='student.marks' %}active{% endif %}"><i class="fas fa-chart-bar"></i><span>Marks</span></a>
+            <div class="nav-section-title">Communication</div>
+            <a href="{{ url_for('student.announcements') }}" class="nav-item {% if ep=='student.announcements' %}active{% endif %}"><i class="fas fa-bullhorn"></i><span>Announcements</span></a>
+            <div class="nav-section-title">Finance</div>
+            <a href="{{ url_for('student.fees') }}" class="nav-item {% if ep=='student.fees' %}active{% endif %}"><i class="fas fa-wallet"></i><span>My Fees</span></a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">{{ session.get('full_name','U')[0] }}</div>
+                <div class="user-details">
+                    <span class="user-name">{{ session.get('full_name') }}</span>
+                    <span class="user-role">{{ session.get('role','').title() }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </aside>
+
+    <!-- ======== Main ======== -->
+    <main class="main-content">
+        <header class="main-header">
+            <div class="flex-center gap-2">
+                <button class="btn-menu" id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline btn-sm theme-toggle-btn" title="Toggle Theme"><i class="fas fa-sun"></i></button>
+                {% block header_actions %}{% endblock %}
+            </div>
+        </header>
+        <div class="content-area">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }}">
+                <i class="fas {% if cat=='success' %}fa-check-circle{% elif cat=='danger' %}fa-exclamation-circle{% elif cat=='warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                <span>{{ msg }}</span>
+                <button class="alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            </div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+{% else %}
+<!-- Auth pages (no sidebar) -->
+<div class="auth-layout">
+    <button class="btn btn-outline btn-sm theme-toggle-btn" title="Toggle Theme" style="position:absolute; top:20px; right:20px; z-index:100;"><i class="fas fa-sun"></i></button>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="position:fixed;top:20px;right:20px;z-index:1000;max-width:400px;">
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">
+            <i class="fas {% if cat=='success' %}fa-check-circle{% elif cat=='danger' %}fa-exclamation-circle{% elif cat=='warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+            <span>{{ msg }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% block auth_content %}{% endblock %}
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

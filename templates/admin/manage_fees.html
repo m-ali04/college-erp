@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Manage Fees — College ERP{% endblock %}
+{% block page_title %}Manage Fees{% endblock %}
+{% block content %}
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-file-invoice-dollar"></i> Issue New Fee</h2></div>
+    <form method="POST" action="{{ url_for('admin.create_fee') }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Student *</label>
+                <select name="student_id" required>
+                    <option value="">Select Student</option>
+                    {% for s in students %}<option value="{{ s.student_id }}">{{ s.roll_no or 'N/A' }} — {{ s.full_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fee Type *</label>
+                <input type="text" name="fee_type" required placeholder="e.g. Tuition Fee - Fall 2026">
+            </div>
+            <div class="form-group">
+                <label>Amount (Rs.) *</label>
+                <input type="number" name="amount" required step="0.01" min="0.01" placeholder="e.g. 1500.00">
+            </div>
+            <div class="form-group">
+                <label>Due Date *</label>
+                <input type="date" name="due_date" required>
+            </div>
+        </div>
+        <div class="mt-2"><button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Issue Fee</button></div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> All Fee Records ({{ fees|length }})</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Student</th><th>Roll No</th><th>Fee Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for f in fees %}
+            <tr>
+                <td>{{ f.full_name }}</td>
+                <td>{{ f.roll_no or '—' }}</td>
+                <td>{{ f.fee_type }}</td>
+                <td><strong>${{ "%.2f"|format(f.amount) }}</strong></td>
+                <td>{{ f.due_date.strftime('%b %d, %Y') }}</td>
+                <td>
+                    {% if f.status == 'paid' %}
+                        <span class="badge badge-present">Paid</span>
+                    {% elif f.status == 'pending' %}
+                        <span class="badge badge-warning" style="background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)">Pending</span>
+                    {% else %}
+                        <span class="badge badge-absent">Overdue</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if f.status != 'paid' %}
+                    <form method="POST" action="{{ url_for('admin.mark_fee_paid', fee_id=f.fee_id) }}" style="display:inline">
+                        <button type="submit" class="btn btn-success btn-sm" title="Mark Paid"><i class="fas fa-check"></i></button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('admin.delete_fee', fee_id=f.fee_id) }}" style="display:inline">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this.parentElement, 'fee record')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

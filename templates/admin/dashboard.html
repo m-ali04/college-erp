@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — College ERP{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="welcome-banner admin-banner">
+    <div class="welcome-banner-animation">
+        <dotlottie-player src="{{ url_for('static', filename='dotlot/adm.lottie') }}" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></dotlottie-player>
+    </div>
+    <div class="welcome-banner-text">
+        <h1>Welcome, {{ session.get('full_name') }}!</h1>
+        <p>System Administrator Dashboard</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary"><i class="fas fa-users"></i></div>
+        <div class="stat-info"><h3>{{ stats.total_users }}</h3><p>Total Users</p></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success"><i class="fas fa-user-graduate"></i></div>
+        <div class="stat-info"><h3>{{ stats.total_students }}</h3><p>Students</p></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon info"><i class="fas fa-chalkboard-teacher"></i></div>
+        <div class="stat-info"><h3>{{ stats.total_teachers }}</h3><p>Teachers</p></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning"><i class="fas fa-book"></i></div>
+        <div class="stat-info"><h3>{{ stats.total_courses }}</h3><p>Courses</p></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon danger"><i class="fas fa-link"></i></div>
+        <div class="stat-info"><h3>{{ stats.total_enrollments }}</h3><p>Enrollments</p></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fas fa-bullhorn"></i> Recent Announcements</h2>
+    </div>
+    {% if announcements %}
+    <div class="announcement-list">
+        {% for a in announcements %}
+        <div class="announcement-card">
+            <div class="meta">
+                <span><i class="fas fa-user"></i> {{ a.poster_name }}</span>
+                <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+            </div>
+            <h3>{{ a.title }}</h3>
+            <p class="body">{{ a.body }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements yet.</p></div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+{% endblock %}

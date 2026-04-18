@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Marks Entry — College ERP{% endblock %}
+{% block page_title %}Marks Entry{% endblock %}
+{% block content %}
+
+<form class="filter-bar" method="GET" action="{{ url_for('teacher.marks') }}">
+    <div class="form-group">
+        <label>Course</label>
+        <select name="course_id" required>
+            <option value="">Select Course</option>
+            {% for c in courses %}
+            <option value="{{ c.course_id }}" {% if selected_course == c.course_id|string %}selected{% endif %}>{{ c.course_code }} — {{ c.course_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Exam Type</label>
+        <select name="exam_type" required>
+            <option value="">Select Type</option>
+            <option value="midterm" {% if selected_exam == 'midterm' %}selected{% endif %}>Midterm</option>
+            <option value="final" {% if selected_exam == 'final' %}selected{% endif %}>Final</option>
+            <option value="quiz" {% if selected_exam == 'quiz' %}selected{% endif %}>Quiz</option>
+            <option value="assignment" {% if selected_exam == 'assignment' %}selected{% endif %}>Assignment</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Load Students</button>
+</form>
+
+{% if students %}
+<form method="POST" action="{{ url_for('teacher.marks') }}">
+    <input type="hidden" name="course_id" value="{{ selected_course }}">
+    <input type="hidden" name="exam_type" value="{{ selected_exam }}">
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fas fa-chart-bar"></i> Enter Marks ({{ students|length }} students)</h2>
+            <div class="flex gap-2" style="align-items:flex-end">
+                <div class="form-group" style="min-width:120px">
+                    <label>Total Marks *</label>
+                    <input type="number" name="total_marks" step="0.01" min="0.01" required value="{{ students[0].total_marks or '' }}" placeholder="e.g. 100">
+                </div>
+                <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save Marks</button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Roll No</th><th>Name</th><th>Section</th><th>Obtained Marks</th><th>Remarks</th></tr></thead>
+                <tbody>
+                {% for s in students %}
+                <tr>
+                    <input type="hidden" name="enrollment_ids" value="{{ s.enrollment_id }}">
+                    <td>{{ s.roll_no or '—' }}</td>
+                    <td><strong>{{ s.full_name }}</strong></td>
+                    <td>{{ s.section or '—' }}</td>
+                    <td><input type="number" name="marks_{{ s.enrollment_id }}" step="0.01" min="0" value="{{ s.obtained_marks or '' }}" placeholder="0.00" style="width:120px"></td>
+                    <td><input type="text" name="remarks_{{ s.enrollment_id }}" value="{{ s.remarks or '' }}" placeholder="Optional" style="width:160px"></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+{% elif selected_course and selected_exam %}
+<div class="card"><div class="empty-state"><i class="fas fa-users"></i><p>No students enrolled in this course.</p></div></div>
+{% endif %}
+{% endblock %}

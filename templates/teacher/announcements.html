@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Announcements — College ERP{% endblock %}
+{% block page_title %}Announcements{% endblock %}
+{% block content %}
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-bullhorn"></i> Post Course Announcement</h2></div>
+    <form method="POST" action="{{ url_for('teacher.announcements') }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Course *</label>
+                <select name="course_id" required>
+                    <option value="">Select Course</option>
+                    {% for c in courses %}<option value="{{ c.course_id }}">{{ c.course_code }} — {{ c.course_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Title *</label><input type="text" name="title" required placeholder="Announcement title"></div>
+            <div class="form-group full-width"><label>Body *</label><textarea name="body" required placeholder="Write your announcement..."></textarea></div>
+        </div>
+        <div class="mt-2"><button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Post</button></div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> My Announcements</h2></div>
+    {% if announcements %}
+    <div class="announcement-list">
+        {% for a in announcements %}
+        <div class="announcement-card">
+            <div class="meta">
+                <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                {% if a.course_code %}<span class="course-tag"><i class="fas fa-book"></i> {{ a.course_code }}</span>{% endif %}
+            </div>
+            <h3>{{ a.title }}</h3>
+            <p class="body">{{ a.body }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-bullhorn"></i><p>You haven't posted any announcements yet.</p></div>
+    {% endif %}
+</div>
+{% endblock %}
