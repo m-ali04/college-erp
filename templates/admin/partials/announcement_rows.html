@@ -1,0 +1,12 @@
+{% for a in announcements %}
+<div class="announcement-card">
+    <div class="meta">
+        <span><i class="fas fa-user"></i> {{ a.poster_name }}</span>
+        <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+        {% if a.course_code %}<span class="course-tag"><i class="fas fa-book"></i> {{ a.course_code }}</span>
+        {% else %}<span class="course-tag"><i class="fas fa-globe"></i> System-wide</span>{% endif %}
+    </div>
+    <h3>{{ a.title }}</h3>
+    <p class="body">{{ a.body }}</p>
+</div>
+{% endfor %}

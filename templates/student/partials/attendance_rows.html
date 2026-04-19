@@ -1,0 +1,16 @@
+{% for d in attendance_data %}
+{% set pct = ((d.present_count / d.total_classes) * 100)|round(1) if d.total_classes else 0 %}
+<tr>
+    <td><strong>{{ d.course_code }}</strong><br><small class="text-muted">{{ d.course_name }}</small></td>
+    <td><span class="badge badge-present">{{ d.present_count }}</span></td>
+    <td><span class="badge badge-late">{{ d.late_count }}</span></td>
+    <td><span class="badge badge-absent">{{ d.absent_count }}</span></td>
+    <td>{{ d.total_classes }}</td>
+    <td><strong>{{ pct }}%</strong></td>
+    <td style="min-width:120px">
+        <div class="progress-bar">
+            <div class="progress-fill {% if pct >= 75 %}success{% elif pct >= 50 %}warning{% else %}danger{% endif %}" style="width:{{ pct }}%"></div>
+        </div>
+    </td>
+</tr>
+{% endfor %}

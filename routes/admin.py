@@ -37,7 +37,20 @@ def dashboard():
 @admin_bp.route('/users')
 @role_required('admin')
 def manage_users():
-    users = execute_query("""
+    is_ajax = request.args.get('ajax') == '1'
+    search_query = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    
+    where_clause = ""
+    params = []
+    
+    if search_query:
+        where_clause = "WHERE u.full_name ILIKE %s OR u.email ILIKE %s OR u.role ILIKE %s"
+        like_q = f"%{search_query}%"
+        params.extend([like_q, like_q, like_q])
+        
+    query = f"""
         SELECT u.*,
                s.student_id, s.roll_no, s.department AS student_dept,
                s.batch_year, s.section,
@@ -46,9 +59,19 @@ def manage_users():
         FROM users u
         LEFT JOIN students s ON u.user_id = s.user_id
         LEFT JOIN teachers t ON u.user_id = t.user_id
+        {where_clause}
         ORDER BY u.created_at DESC
-    """, fetch=True)
-    return render_template('admin/manage_users.html', users=users)
+        LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    
+    users = execute_query(query, tuple(params), fetch=True)
+    
+    if is_ajax:
+        html = render_template('admin/partials/user_rows.html', users=users)
+        return {"html": html, "count": len(users)}
+
+    return render_template('admin/manage_users.html', users=[])
 
 
 @admin_bp.route('/users/create', methods=['POST'])
@@ -197,8 +220,34 @@ def edit_user(user_id):
 @admin_bp.route('/courses')
 @role_required('admin')
 def manage_courses():
-    courses = execute_query("SELECT * FROM courses ORDER BY course_code", fetch=True)
-    return render_template('admin/manage_courses.html', courses=courses)
+    is_ajax = request.args.get('ajax') == '1'
+    search_query = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    
+    where_clause = ""
+    params = []
+    
+    if search_query:
+        where_clause = "WHERE course_code ILIKE %s OR course_name ILIKE %s OR department ILIKE %s"
+        like_q = f"%{search_query}%"
+        params.extend([like_q, like_q, like_q])
+        
+    query = f"""
+        SELECT * FROM courses
+        {where_clause}
+        ORDER BY course_code
+        LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    
+    courses = execute_query(query, tuple(params), fetch=True)
+    
+    if is_ajax:
+        html = render_template('admin/partials/course_rows.html', courses=courses)
+        return {"html": html, "count": len(courses)}
+
+    return render_template('admin/manage_courses.html', courses=[])
 
 
 @admin_bp.route('/courses/create', methods=['POST'])
@@ -268,15 +317,37 @@ def edit_course(course_id):
 @admin_bp.route('/enrollments')
 @role_required('admin')
 def manage_enrollments():
-    enrollments = execute_query("""
+    is_ajax = request.args.get('ajax') == '1'
+    search_query = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    
+    where_clause = ""
+    params = []
+    
+    if search_query:
+        where_clause = "WHERE u.full_name ILIKE %s OR s.roll_no ILIKE %s OR c.course_name ILIKE %s"
+        like_q = f"%{search_query}%"
+        params.extend([like_q, like_q, like_q])
+        
+    query = f"""
         SELECT e.*, s.roll_no, u.full_name,
                c.course_code, c.course_name
         FROM enrollments e
         JOIN students s ON e.student_id = s.student_id
         JOIN users u    ON s.user_id    = u.user_id
         JOIN courses c  ON e.course_id  = c.course_id
+        {where_clause}
         ORDER BY e.academic_year DESC, e.semester, c.course_code
-    """, fetch=True)
+        LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    
+    enrollments = execute_query(query, tuple(params), fetch=True)
+
+    if is_ajax:
+        html = render_template('admin/partials/enrollment_rows.html', enrollments=enrollments)
+        return {"html": html, "count": len(enrollments)}
 
     students = execute_query("""
         SELECT s.student_id, s.roll_no, u.full_name
@@ -287,7 +358,7 @@ def manage_enrollments():
     courses = execute_query("SELECT * FROM courses ORDER BY course_code", fetch=True)
 
     return render_template('admin/manage_enrollments.html',
-                           enrollments=enrollments, students=students, courses=courses)
+                           enrollments=[], students=students, courses=courses)
 
 
 @admin_bp.route('/enrollments/create', methods=['POST'])
@@ -333,15 +404,37 @@ def delete_enrollment(enrollment_id):
 @admin_bp.route('/assignments')
 @role_required('admin')
 def manage_assignments():
-    assignments = execute_query("""
+    is_ajax = request.args.get('ajax') == '1'
+    search_query = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    
+    where_clause = ""
+    params = []
+    
+    if search_query:
+        where_clause = "WHERE u.full_name ILIKE %s OR t.employee_code ILIKE %s OR c.course_name ILIKE %s"
+        like_q = f"%{search_query}%"
+        params.extend([like_q, like_q, like_q])
+        
+    query = f"""
         SELECT ca.*, t.employee_code, u.full_name,
                c.course_code, c.course_name
         FROM course_assignments ca
         JOIN teachers t ON ca.teacher_id = t.teacher_id
         JOIN users u    ON t.user_id     = u.user_id
         JOIN courses c  ON ca.course_id  = c.course_id
+        {where_clause}
         ORDER BY ca.academic_year DESC, ca.semester, c.course_code
-    """, fetch=True)
+        LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    
+    assignments = execute_query(query, tuple(params), fetch=True)
+    
+    if is_ajax:
+        html = render_template('admin/partials/assignment_rows.html', assignments=assignments)
+        return {"html": html, "count": len(assignments)}
 
     teachers = execute_query("""
         SELECT t.teacher_id, t.employee_code, u.full_name
@@ -352,7 +445,7 @@ def manage_assignments():
     courses = execute_query("SELECT * FROM courses ORDER BY course_code", fetch=True)
 
     return render_template('admin/manage_assignments.html',
-                           assignments=assignments, teachers=teachers, courses=courses)
+                           assignments=[], teachers=teachers, courses=courses)
 
 
 @admin_bp.route('/assignments/create', methods=['POST'])
@@ -398,15 +491,38 @@ def delete_assignment(assignment_id):
 @admin_bp.route('/announcements')
 @role_required('admin')
 def announcements():
-    rows = execute_query("""
+    is_ajax = request.args.get('ajax') == '1'
+    search_query = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    
+    where_clause = ""
+    params = []
+    
+    if search_query:
+        where_clause = "WHERE a.title ILIKE %s OR a.body ILIKE %s OR u.full_name ILIKE %s"
+        like_q = f"%{search_query}%"
+        params.extend([like_q, like_q, like_q])
+        
+    query = f"""
         SELECT a.*, u.full_name AS poster_name,
                c.course_name, c.course_code
         FROM announcements a
         JOIN users u ON a.posted_by = u.user_id
         LEFT JOIN courses c ON a.course_id = c.course_id
+        {where_clause}
         ORDER BY a.created_at DESC
-    """, fetch=True)
-    return render_template('admin/announcements.html', announcements=rows)
+        LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    
+    rows = execute_query(query, tuple(params), fetch=True)
+    
+    if is_ajax:
+        html = render_template('admin/partials/announcement_rows.html', announcements=rows)
+        return {"html": html, "count": len(rows)}
+
+    return render_template('admin/announcements.html', announcements=[])
 
 
 @admin_bp.route('/announcements/create', methods=['POST'])
@@ -440,13 +556,35 @@ def create_announcement():
 def manage_fees():
     execute_query("UPDATE student_fees SET status = 'overdue' WHERE status = 'pending' AND due_date < CURRENT_DATE")
     
-    fees = execute_query("""
+    is_ajax = request.args.get('ajax') == '1'
+    search_query = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    
+    where_clause = ""
+    params = []
+    
+    if search_query:
+        where_clause = "WHERE u.full_name ILIKE %s OR s.roll_no ILIKE %s OR f.fee_type ILIKE %s"
+        like_q = f"%{search_query}%"
+        params.extend([like_q, like_q, like_q])
+        
+    query = f"""
         SELECT f.*, s.roll_no, u.full_name
         FROM student_fees f
         JOIN students s ON f.student_id = s.student_id
         JOIN users u ON s.user_id = u.user_id
+        {where_clause}
         ORDER BY f.created_at DESC
-    """, fetch=True)
+        LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    
+    fees = execute_query(query, tuple(params), fetch=True)
+    
+    if is_ajax:
+        html = render_template('admin/partials/fee_rows.html', fees=fees)
+        return {"html": html, "count": len(fees)}
     
     students = execute_query("""
         SELECT s.student_id, s.roll_no, u.full_name
@@ -454,7 +592,7 @@ def manage_fees():
         ORDER BY s.roll_no
     """, fetch=True)
     
-    return render_template('admin/manage_fees.html', fees=fees, students=students)
+    return render_template('admin/manage_fees.html', fees=[], students=students)
 
 @admin_bp.route('/fees/create', methods=['POST'])
 @role_required('admin')

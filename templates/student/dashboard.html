@@ -4,9 +4,9 @@
 {% block content %}
 
 <!-- Welcome Banner -->
-<div class="welcome-banner student-banner">
+<div class="welcome-banner student-banner" style="margin-bottom:1.5rem">
     <div class="welcome-banner-animation">
-        <dotlottie-player src="{{ url_for('static', filename='dotlot/std.lottie') }}" background="transparent" speed="1" style="width: 100%; height: 100%;" loop autoplay></dotlottie-player>
+        <dotlottie-player src="{{ url_for('static', filename='dotlot/std.lottie') }}" background="transparent" speed="1" style="width:100%;height:100%;" loop autoplay></dotlottie-player>
     </div>
     <div class="welcome-banner-text">
         <h1>Welcome, {{ student.full_name }}!</h1>
@@ -14,82 +14,335 @@
     </div>
 </div>
 
-<!-- Student Stats -->
-<div class="stats-grid">
-    <div class="stat-card">
+<!-- ── Top Stats ── -->
+<div class="stats-grid" style="margin-bottom:1.2rem">
+    <div class="stat-card db-stat-gradient db-stat-blue">
         <div class="stat-icon info"><i class="fas fa-book"></i></div>
         <div class="stat-info"><h3>{{ course_count }}</h3><p>Enrolled Courses</p></div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card db-stat-gradient db-stat-green">
         <div class="stat-icon success"><i class="fas fa-calendar-check"></i></div>
         <div class="stat-info">
             <h3>{{ attendance.present or 0 }}/{{ attendance.total or 0 }}</h3>
             <p>Classes Attended</p>
         </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card db-stat-gradient db-stat-yellow">
         <div class="stat-icon warning"><i class="fas fa-percentage"></i></div>
         <div class="stat-info">
             <h3>{% if attendance.total %}{{ ((attendance.present / attendance.total) * 100)|round(1) }}%{% else %}N/A{% endif %}</h3>
             <p>Attendance Rate</p>
         </div>
     </div>
-</div>
-
-<!-- Attendance Progress -->
-{% if attendance.total %}
-<div class="card mb-3">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-chart-pie"></i> Attendance Overview</h2></div>
-    <div style="display:flex;gap:24px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
-            <div class="flex-between mb-1">
-                <span style="font-size:.85rem">Present</span>
-                <span class="badge badge-present">{{ attendance.present }}</span>
-            </div>
-            <div class="progress-bar"><div class="progress-fill success" style="width:{{ (attendance.present / attendance.total * 100)|round }}%"></div></div>
-        </div>
-        <div style="flex:1;min-width:200px">
-            <div class="flex-between mb-1">
-                <span style="font-size:.85rem">Late</span>
-                <span class="badge badge-late">{{ attendance.late }}</span>
-            </div>
-            <div class="progress-bar"><div class="progress-fill warning" style="width:{{ (attendance.late / attendance.total * 100)|round }}%"></div></div>
-        </div>
-        <div style="flex:1;min-width:200px">
-            <div class="flex-between mb-1">
-                <span style="font-size:.85rem">Absent</span>
-                <span class="badge badge-absent">{{ attendance.absent }}</span>
-            </div>
-            <div class="progress-bar"><div class="progress-fill danger" style="width:{{ (attendance.absent / attendance.total * 100)|round }}%"></div></div>
+    {% if fees_summary and fees_summary.total_invoices %}
+    <div class="stat-card db-stat-gradient db-stat-red">
+        <div class="stat-icon danger"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="stat-info">
+            <h3>Rs.{{ "%.0f"|format((fees_summary.overdue or 0) + (fees_summary.pending or 0)) }}</h3>
+            <p>Fees Outstanding</p>
         </div>
     </div>
+    {% endif %}
 </div>
-{% endif %}
 
-<!-- Recent Announcements -->
-<div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-bullhorn"></i> Recent Announcements</h2></div>
+<!-- ── Row 1: Attendance Donut + Marks Bar ── -->
+<div class="db-grid-2 mb-db">
+
+    <!-- Attendance -->
+    {% if attendance.total %}
+    <div class="card db-chart-card">
+        <div class="card-header db-card-header-gradient">
+            <h2 class="card-title" style="font-size:.95rem"><i class="fas fa-chart-pie"></i> Attendance</h2>
+            {% set att_pct = ((attendance.present / attendance.total) * 100)|round(1) %}
+            <span class="db-pct-badge {% if att_pct >= 75 %}db-pct-green{% elif att_pct >= 50 %}db-pct-yellow{% else %}db-pct-red{% endif %}">{{ att_pct }}%</span>
+        </div>
+        <div class="db-chart-body">
+            <div class="db-att-pills">
+                <div class="db-pill db-pill-green"><span class="db-pill-num">{{ attendance.present }}</span><span class="db-pill-lbl">Present</span></div>
+                <div class="db-pill db-pill-yellow"><span class="db-pill-num">{{ attendance.late }}</span><span class="db-pill-lbl">Late</span></div>
+                <div class="db-pill db-pill-red"><span class="db-pill-num">{{ attendance.absent }}</span><span class="db-pill-lbl">Absent</span></div>
+            </div>
+            <div class="db-donut-wrap">
+                <canvas id="attDonut"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Marks by Exam Type -->
+    {% if marks_by_type %}
+    <div class="card db-chart-card">
+        <div class="card-header db-card-header-gradient">
+            <h2 class="card-title" style="font-size:.95rem"><i class="fas fa-chart-bar"></i> Marks by Exam Type</h2>
+        </div>
+        <div class="db-chart-body">
+            <div class="db-exam-pills">
+                {% for m in marks_by_type %}
+                {% set pct = ((m.obtained / m.total) * 100)|round(1) if m.total else 0 %}
+                <span class="db-exam-tag {% if pct>=75 %}db-tag-green{% elif pct>=50 %}db-tag-yellow{% else %}db-tag-red{% endif %}">
+                    {{ m.exam_type|title }}: {{ pct }}%
+                </span>
+                {% endfor %}
+            </div>
+            <div class="db-bar-wrap">
+                <canvas id="marksBar"></canvas>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card db-chart-card">
+        <div class="card-header db-card-header-gradient">
+            <h2 class="card-title" style="font-size:.95rem"><i class="fas fa-chart-bar"></i> Marks by Exam Type</h2>
+        </div>
+        <div class="empty-state" style="padding:2rem"><i class="fas fa-chart-bar"></i><p>No marks yet.</p></div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ── Row 2: Fees + Course Performance ── -->
+<div class="db-grid-2 mb-db">
+
+    <!-- Fees -->
+    <div class="card db-chart-card">
+        <div class="card-header db-card-header-gradient">
+            <h2 class="card-title" style="font-size:.95rem"><i class="fas fa-file-invoice-dollar"></i> Fees Overview</h2>
+            <a href="{{ url_for('student.fees') }}" class="btn btn-primary btn-sm" style="font-size:.75rem;padding:4px 10px">View All</a>
+        </div>
+        {% if fees_summary and fees_summary.total_invoices %}
+        <div class="db-chart-body">
+            <div class="db-fee-pills">
+                <div class="db-pill db-pill-green" style="flex:1">
+                    <span class="db-pill-num" style="font-size:1rem">Rs.{{ "%.0f"|format(fees_summary.paid) }}</span>
+                    <span class="db-pill-lbl">Paid ({{ fees_summary.paid_count }})</span>
+                </div>
+                <div class="db-pill db-pill-yellow" style="flex:1">
+                    <span class="db-pill-num" style="font-size:1rem">Rs.{{ "%.0f"|format(fees_summary.pending) }}</span>
+                    <span class="db-pill-lbl">Pending ({{ fees_summary.pending_count }})</span>
+                </div>
+                <div class="db-pill db-pill-red" style="flex:1">
+                    <span class="db-pill-num" style="font-size:1rem">Rs.{{ "%.0f"|format(fees_summary.overdue) }}</span>
+                    <span class="db-pill-lbl">Overdue ({{ fees_summary.overdue_count }})</span>
+                </div>
+            </div>
+            <div class="db-donut-wrap" style="max-height:130px">
+                <canvas id="feesDoughnut"></canvas>
+            </div>
+            {% if recent_fees %}
+            <div class="db-invoice-list">
+                {% for f in recent_fees %}
+                <div class="db-invoice-row">
+                    <span class="db-invoice-name">{{ f.fee_type }}</span>
+                    <div style="display:flex;align-items:center;gap:.4rem">
+                        <span class="db-invoice-amt">Rs.{{ "%.0f"|format(f.amount) }}</span>
+                        <span class="badge {% if f.status=='paid' %}badge-present{% elif f.status=='pending' %}badge-warning{% else %}badge-absent{% endif %}" style="font-size:.65rem;padding:2px 7px">{{ f.status|title }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:2rem"><i class="fas fa-file-invoice-dollar"></i><p>No fee records.</p></div>
+        {% endif %}
+    </div>
+
+    <!-- Course Performance -->
+    <div class="card db-chart-card">
+        <div class="card-header db-card-header-gradient">
+            <h2 class="card-title" style="font-size:.95rem"><i class="fas fa-graduation-cap"></i> Course Performance</h2>
+            <a href="{{ url_for('student.marks') }}" class="btn btn-primary btn-sm" style="font-size:.75rem;padding:4px 10px">Full Marks</a>
+        </div>
+        {% if course_marks %}
+        <div class="db-chart-body" style="overflow-y:auto;max-height:320px">
+            {% for cm in course_marks %}
+            {% set pct = ((cm.obtained / cm.total) * 100)|round(1) if cm.total else 0 %}
+            <div class="db-course-row">
+                <div class="db-course-meta">
+                    <span class="db-course-code">{{ cm.course_code }}</span>
+                    <span class="db-course-name">{{ cm.course_name }}</span>
+                </div>
+                <span class="db-course-pct {% if pct>=75 %}db-pct-green{% elif pct>=50 %}db-pct-yellow{% else %}db-pct-red{% endif %}">{{ pct }}%</span>
+                <div class="progress-bar db-progress" style="margin-top:.3rem">
+                    <div class="progress-fill {% if pct>=75 %}success{% elif pct>=50 %}warning{% else %}danger{% endif %} db-grad-fill" style="width:{{ pct }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:2rem"><i class="fas fa-graduation-cap"></i><p>No marks yet.</p></div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ── Announcements ── -->
+<div class="card" style="margin-bottom:1.5rem">
+    <div class="card-header db-card-header-gradient">
+        <h2 class="card-title" style="font-size:.95rem"><i class="fas fa-bullhorn"></i> Recent Announcements</h2>
+        <a href="{{ url_for('student.announcements') }}" class="btn btn-outline btn-sm" style="font-size:.75rem;padding:4px 10px">View All</a>
+    </div>
     {% if announcements %}
-    <div class="announcement-list">
+    <div class="announcement-list" style="gap:8px">
         {% for a in announcements %}
-        <div class="announcement-card">
+        <div class="announcement-card" style="padding:14px">
             <div class="meta">
                 <span><i class="fas fa-user"></i> {{ a.poster_name }}</span>
                 <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y') }}</span>
                 {% if a.course_code %}<span class="course-tag"><i class="fas fa-book"></i> {{ a.course_code }}</span>
                 {% else %}<span class="course-tag"><i class="fas fa-globe"></i> System</span>{% endif %}
             </div>
-            <h3>{{ a.title }}</h3>
-            <p class="body">{{ a.body }}</p>
+            <h3 style="font-size:.95rem;margin-bottom:4px">{{ a.title }}</h3>
+            <p class="body" style="font-size:.85rem">{{ a.body }}</p>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements.</p></div>
+    <div class="empty-state" style="padding:2rem"><i class="fas fa-bullhorn"></i><p>No announcements.</p></div>
     {% endif %}
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const isLight  = document.documentElement.getAttribute('data-theme') === 'light';
+    const textClr  = isLight ? '#374151' : '#cbd5e1';
+    const gridClr  = isLight ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.06)';
+    const tipBg    = isLight ? '#ffffff' : '#1e293b';
+    const tipBdr   = isLight ? '#e2e8f0' : '#334155';
+
+    Chart.defaults.color = textClr;
+    Chart.defaults.font.family = "'Inter','Outfit',sans-serif";
+    Chart.defaults.font.size   = 11;
+
+    /* shared gradient helper */
+    function gradientBar(ctx, colors) {
+        const g = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+        g.addColorStop(0, colors[0]);
+        g.addColorStop(1, colors[1]);
+        return g;
+    }
+
+    /* ── Attendance Donut ── */
+    const attEl = document.getElementById('attDonut');
+    if (attEl) {
+        const ctx = attEl.getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present','Late','Absent'],
+                datasets: [{
+                    data: [{{ attendance.present or 0 }},{{ attendance.late or 0 }},{{ attendance.absent or 0 }}],
+                    backgroundColor: [
+                        'rgba(16,185,129,.85)',
+                        'rgba(245,158,11,.85)',
+                        'rgba(239,68,68,.85)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: isLight ? '#fff' : '#161D2F',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                cutout: '75%',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position:'bottom', labels:{ padding:10, boxWidth:10, font:{size:11} } },
+                    tooltip: { backgroundColor:tipBg, borderColor:tipBdr, borderWidth:1, titleColor:textClr, bodyColor:textClr }
+                }
+            }
+        });
+    }
+
+    /* ── Marks Bar ── */
+    const marksEl = document.getElementById('marksBar');
+    if (marksEl) {
+        const labels  = [{% for m in marks_by_type %}"{{ m.exam_type|title }}"{% if not loop.last %},{% endif %}{% endfor %}];
+        const obtained = [{% for m in marks_by_type %}{{ m.obtained or 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+        const totals   = [{% for m in marks_by_type %}{{ m.total or 0 }}{% if not loop.last %},{% endif %}{% endfor %}];
+        const pcts     = obtained.map((o,i) => totals[i] ? +((o/totals[i])*100).toFixed(1) : 0);
+
+        const ctx = marksEl.getContext('2d');
+        /* gradient per-bar */
+        const bgColors = pcts.map(p => {
+            const g = ctx.createLinearGradient(0, 0, 0, 150);
+            if (p >= 75) { g.addColorStop(0,'rgba(16,185,129,.9)'); g.addColorStop(1,'rgba(16,185,129,.3)'); }
+            else if (p >= 50) { g.addColorStop(0,'rgba(245,158,11,.9)'); g.addColorStop(1,'rgba(245,158,11,.3)'); }
+            else { g.addColorStop(0,'rgba(239,68,68,.9)'); g.addColorStop(1,'rgba(239,68,68,.3)'); }
+            return g;
+        });
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Score %',
+                    data: pcts,
+                    backgroundColor: bgColors,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { min:0, max:100, grid:{ color:gridClr }, ticks:{ callback:v=>v+'%', font:{size:10} } },
+                    x: { grid:{ display:false }, ticks:{ font:{size:10} } }
+                },
+                plugins: {
+                    legend: { display:false },
+                    tooltip: {
+                        backgroundColor:tipBg, borderColor:tipBdr, borderWidth:1,
+                        titleColor:textClr, bodyColor:textClr,
+                        callbacks:{ label: ctx=>`Score: ${ctx.parsed.y}% (${obtained[ctx.dataIndex]}/${totals[ctx.dataIndex]})` }
+                    }
+                }
+            }
+        });
+    }
+
+    /* ── Fees Donut ── */
+    const feesEl = document.getElementById('feesDoughnut');
+    if (feesEl) {
+        const ctx = feesEl.getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid','Pending','Overdue'],
+                datasets: [{
+                    data: [{{ fees_summary.paid or 0 }},{{ fees_summary.pending or 0 }},{{ fees_summary.overdue or 0 }}],
+                    backgroundColor: [
+                        'rgba(16,185,129,.85)',
+                        'rgba(245,158,11,.85)',
+                        'rgba(239,68,68,.85)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: isLight ? '#fff' : '#161D2F',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                cutout: '75%',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position:'bottom', labels:{ padding:8, boxWidth:10, font:{size:11} } },
+                    tooltip: {
+                        backgroundColor:tipBg, borderColor:tipBdr, borderWidth:1,
+                        titleColor:textClr, bodyColor:textClr,
+                        callbacks:{ label: ctx=>`Rs. ${ctx.parsed.toLocaleString()}` }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

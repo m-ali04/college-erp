@@ -15,7 +15,7 @@
         if(savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
     </script>
 </head>
-<body>
+<body data-role="{{ session.get('role', '') }}">
 {% if session.get('user_id') %}
 <div class="app-layout">
     <!-- ======== Sidebar ======== -->

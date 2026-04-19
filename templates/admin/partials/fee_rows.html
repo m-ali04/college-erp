@@ -1,0 +1,28 @@
+{% for f in fees %}
+<tr>
+    <td>{{ f.full_name }}</td>
+    <td>{{ f.roll_no or '—' }}</td>
+    <td>{{ f.fee_type }}</td>
+    <td><strong>Rs.{{ "%.2f"|format(f.amount) }}</strong></td>
+    <td>{{ f.due_date.strftime('%b %d, %Y') }}</td>
+    <td>
+        {% if f.status == 'paid' %}
+            <span class="badge badge-present">Paid</span>
+        {% elif f.status == 'pending' %}
+            <span class="badge badge-warning" style="background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)">Pending</span>
+        {% else %}
+            <span class="badge badge-absent">Overdue</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if f.status != 'paid' %}
+        <form method="POST" action="{{ url_for('admin.mark_fee_paid', fee_id=f.fee_id) }}" style="display:inline">
+            <button type="submit" class="btn btn-success btn-sm" title="Mark Paid"><i class="fas fa-check"></i></button>
+        </form>
+        {% endif %}
+        <form method="POST" action="{{ url_for('admin.delete_fee', fee_id=f.fee_id) }}" style="display:inline">
+            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this.parentElement, 'fee record')" title="Delete"><i class="fas fa-trash"></i></button>
+        </form>
+    </td>
+</tr>
+{% endfor %}

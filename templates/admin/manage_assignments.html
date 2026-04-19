@@ -29,25 +29,17 @@
 </div>
 
 <div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> All Assignments ({{ assignments|length }})</h2></div>
-    <div class="table-container">
-        <table>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 class="card-title"><i class="fas fa-list"></i> All Assignments</h2>
+        <div class="search-box" style="display: flex; gap: 10px;">
+            <input type="text" id="search-input" class="form-control" placeholder="Search teacher, emp code, or course..." style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+            <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </div>
+    <div class="table-container" id="infinite-scroll-container" data-url="{{ url_for('admin.manage_assignments') }}" style="max-height: 600px; overflow-y: auto;">
+        <table style="width: 100%;">
             <thead><tr><th>Teacher</th><th>Emp Code</th><th>Course</th><th>Semester</th><th>Year</th><th>Actions</th></tr></thead>
-            <tbody>
-            {% for a in assignments %}
-            <tr>
-                <td>{{ a.full_name }}</td>
-                <td>{{ a.employee_code or '—' }}</td>
-                <td>{{ a.course_code }} — {{ a.course_name }}</td>
-                <td>{{ a.semester }}</td>
-                <td>{{ a.academic_year }}</td>
-                <td>
-                    <form method="POST" action="{{ url_for('admin.delete_assignment', assignment_id=a.assignment_id) }}" style="display:inline">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this.parentElement, 'assignment')"><i class="fas fa-trash"></i></button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
+            <tbody id="infinite-table-body">
             </tbody>
         </table>
     </div>

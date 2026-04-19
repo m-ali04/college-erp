@@ -1,0 +1,26 @@
+{% for f in fees %}
+<tr>
+    <td><strong>{{ f.fee_type }}</strong></td>
+    <td>Rs.{{ "%.2f"|format(f.amount) }}</td>
+    <td>{{ f.due_date.strftime('%b %d, %Y') }}</td>
+    <td>
+        {% if f.status == 'paid' %}
+            <span class="badge badge-present">Paid</span>
+        {% elif f.status == 'pending' %}
+            <span class="badge badge-warning" style="background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)">Pending</span>
+        {% else %}
+            <span class="badge badge-absent">Overdue</span>
+        {% endif %}
+    </td>
+    <td>{{ f.payment_date.strftime('%b %d, %Y') if f.payment_date else '—' }}</td>
+    <td>
+        {% if f.status != 'paid' %}
+        <form method="POST" action="{{ url_for('student.simulate_payment', fee_id=f.fee_id) }}">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-credit-card"></i> Pay Now</button>
+        </form>
+        {% else %}
+        <span class="text-muted"><i class="fas fa-check"></i> Cleared</span>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}

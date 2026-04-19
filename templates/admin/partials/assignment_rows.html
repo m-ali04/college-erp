@@ -1,0 +1,14 @@
+{% for a in assignments %}
+<tr>
+    <td>{{ a.full_name }}</td>
+    <td>{{ a.employee_code or '—' }}</td>
+    <td>{{ a.course_code }} — {{ a.course_name }}</td>
+    <td>{{ a.semester }}</td>
+    <td>{{ a.academic_year }}</td>
+    <td>
+        <form method="POST" action="{{ url_for('admin.delete_assignment', assignment_id=a.assignment_id) }}" style="display:inline">
+            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this.parentElement, 'assignment')"><i class="fas fa-trash"></i></button>
+        </form>
+    </td>
+</tr>
+{% endfor %}

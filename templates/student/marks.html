@@ -2,31 +2,157 @@
 {% block title %}My Marks — College ERP{% endblock %}
 {% block page_title %}My Marks{% endblock %}
 {% block content %}
-{% if marks_data %}
+
 <div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-chart-bar"></i> Marks Breakdown</h2></div>
-    <div class="table-container">
-        <table>
-            <thead><tr><th>Course</th><th>Exam Type</th><th>Obtained</th><th>Total</th><th>Percentage</th><th>Remarks</th></tr></thead>
-            <tbody>
-            {% for m in marks_data %}
-            {% set pct = ((m.obtained_marks / m.total_marks) * 100)|round(1) if m.total_marks else 0 %}
-            <tr>
-                <td><strong>{{ m.course_code }}</strong><br><small class="text-muted">{{ m.course_name }}</small></td>
-                <td><span class="badge badge-teacher" style="text-transform:capitalize">{{ m.exam_type }}</span></td>
-                <td><strong>{{ m.obtained_marks }}</strong></td>
-                <td>{{ m.total_marks }}</td>
-                <td>
-                    <strong style="color:{% if pct >= 80 %}var(--success){% elif pct >= 50 %}var(--warning){% else %}var(--danger){% endif %}">{{ pct }}%</strong>
-                </td>
-                <td>{{ m.remarks or '—' }}</td>
-            </tr>
+
+    <!-- ── Header: title + search ── -->
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-bottom:12px">
+        <h2 class="card-title"><i class="fas fa-chart-bar"></i> Marks Breakdown</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="text" id="search-input" class="marks-search-input" placeholder="Search course...">
+            <button id="search-btn" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </div>
+
+    <!-- ── Category Tab Bar ── -->
+    <div class="marks-tab-bar">
+        <button class="marks-tab active" data-type="">
+            <i class="fas fa-list"></i> All
+            {% if marks_summary %}
+            <span class="marks-tab-badge">{{ marks_summary|sum(attribute='cnt') }}</span>
+            {% endif %}
+        </button>
+        <button class="marks-tab" data-type="quiz">
+            <i class="fas fa-pencil-alt"></i> Quizzes
+            {% for s in marks_summary if 'quiz' in s.exam_type|lower %}
+            <span class="marks-tab-badge">{{ s.cnt }}</span>
             {% endfor %}
-            </tbody>
+        </button>
+        <button class="marks-tab" data-type="assignment">
+            <i class="fas fa-file-alt"></i> Assignments
+            {% for s in marks_summary if 'assign' in s.exam_type|lower %}
+            <span class="marks-tab-badge">{{ s.cnt }}</span>
+            {% endfor %}
+        </button>
+        <button class="marks-tab" data-type="midterm">
+            <i class="fas fa-book-open"></i> Midterms
+            {% for s in marks_summary if 'mid' in s.exam_type|lower %}
+            <span class="marks-tab-badge">{{ s.cnt }}</span>
+            {% endfor %}
+        </button>
+        <button class="marks-tab" data-type="final">
+            <i class="fas fa-graduation-cap"></i> Finals
+            {% for s in marks_summary if 'final' in s.exam_type|lower %}
+            <span class="marks-tab-badge">{{ s.cnt }}</span>
+            {% endfor %}
+        </button>
+    </div>
+
+    <!-- ── Summary strip per active category (JS-rendered) ── -->
+    <div id="marks-summary-strip" style="display:none;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg-surface)">
+        <span id="marks-strip-text" style="font-size:.85rem;color:var(--text-muted)"></span>
+    </div>
+
+    <!-- ── Table with infinite scroll ── -->
+    <div class="table-container" id="infinite-scroll-container"
+         data-url="{{ url_for('student.marks') }}"
+         style="max-height:560px;overflow-y:auto">
+        <table style="width:100%">
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Exam Type</th>
+                    <th>Obtained</th>
+                    <th>Total</th>
+                    <th>Percentage</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody id="infinite-table-body"></tbody>
         </table>
     </div>
+
 </div>
-{% else %}
-<div class="card"><div class="empty-state"><i class="fas fa-chart-bar"></i><p>No marks recorded yet.</p></div></div>
-{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    /* ─── state ─── */
+    const container   = document.getElementById('infinite-scroll-container');
+    const tbody       = document.getElementById('infinite-table-body');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn   = document.getElementById('search-btn');
+    const summaryStrip = document.getElementById('marks-summary-strip');
+    const summaryText  = document.getElementById('marks-strip-text');
+    const dataUrl     = container.getAttribute('data-url');
+    const tabs        = document.querySelectorAll('.marks-tab');
+
+    let offset = 0, limit = 20;
+    let currentQ = '', currentType = '';
+    let isLoading = false, hasMore = true;
+
+    /* ─── helpers ─── */
+    function showMsg(html) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px">${html}</td></tr>`;
+    }
+
+    function load(reset = false) {
+        if (isLoading || (!hasMore && !reset)) return;
+        isLoading = true;
+        if (reset) { offset = 0; hasMore = true; showMsg('<i class="fas fa-spinner fa-spin"></i> Loading...'); }
+
+        const url = new URL(dataUrl, location.origin);
+        url.searchParams.set('ajax', '1');
+        url.searchParams.set('q',    currentQ);
+        url.searchParams.set('exam_type', currentType);
+        url.searchParams.set('offset', offset);
+        url.searchParams.set('limit',  limit);
+
+        fetch(url)
+            .then(r => r.json())
+            .then(d => {
+                if (reset) tbody.innerHTML = '';
+                if (d.count < limit) hasMore = false;
+                offset += d.count;
+                if (d.html) tbody.insertAdjacentHTML('beforeend', d.html);
+                if (d.count === 0 && reset) showMsg('No marks found.');
+                isLoading = false;
+            })
+            .catch(() => { if (reset) showMsg('Error loading marks.'); isLoading = false; });
+    }
+
+    /* ─── tab switching ─── */
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentType = tab.dataset.type;
+
+            // update summary strip
+            const label = tab.textContent.trim().split(/\s+/)[1] || 'All';
+            if (currentType) {
+                summaryStrip.style.display = 'block';
+                summaryText.textContent = `Showing: ${label}`;
+            } else {
+                summaryStrip.style.display = 'none';
+            }
+            load(true);
+        });
+    });
+
+    /* ─── search ─── */
+    searchBtn.addEventListener('click', () => { currentQ = searchInput.value.trim(); load(true); });
+    searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') { currentQ = searchInput.value.trim(); load(true); } });
+
+    /* ─── infinite scroll ─── */
+    container.addEventListener('scroll', () => {
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 60) load(false);
+    });
+
+    /* ─── initial load ─── */
+    load(true);
+})();
+</script>
 {% endblock %}

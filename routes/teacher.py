@@ -257,6 +257,34 @@ def announcements():
 
         return redirect(url_for('teacher.announcements'))
 
+    # GET — AJAX infinite scroll support
+    is_ajax = request.args.get('ajax') == '1'
+    q = request.args.get('q', '').strip()
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 10))
+
+    params = [session['user_id']]
+    where_extra = ""
+    if q:
+        where_extra = "AND (a.title ILIKE %s OR a.body ILIKE %s)"
+        like_q = f"%{q}%"
+        params.extend([like_q, like_q])
+
+    query = f"""
+        SELECT a.*, c.course_name, c.course_code
+        FROM announcements a
+        LEFT JOIN courses c ON a.course_id = c.course_id
+        WHERE a.posted_by = %s {where_extra}
+        ORDER BY a.created_at DESC
+        LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    my_announcements = execute_query(query, tuple(params), fetch=True)
+
+    if is_ajax:
+        html = render_template('teacher/partials/announcement_rows.html', announcements=my_announcements)
+        return {"html": html, "count": len(my_announcements)}
+
     courses = execute_query("""
         SELECT ca.course_id, c.course_code, c.course_name
         FROM course_assignments ca
@@ -264,13 +292,5 @@ def announcements():
         WHERE ca.teacher_id = %s
     """, (tid,), fetch=True)
 
-    my_announcements = execute_query("""
-        SELECT a.*, c.course_name, c.course_code
-        FROM announcements a
-        LEFT JOIN courses c ON a.course_id = c.course_id
-        WHERE a.posted_by = %s
-        ORDER BY a.created_at DESC
-    """, (session['user_id'],), fetch=True)
-
     return render_template('teacher/announcements.html',
-                           courses=courses, announcements=my_announcements)
+                           courses=courses, announcements=[])

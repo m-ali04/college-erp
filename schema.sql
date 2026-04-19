@@ -103,8 +103,7 @@
         exam_type      VARCHAR(20) CHECK (exam_type IN ('midterm', 'final', 'quiz', 'assignment')) NOT NULL,
         obtained_marks NUMERIC(5,2) CHECK (obtained_marks >= 0),
         total_marks    NUMERIC(5,2) CHECK (total_marks > 0),
-        remarks        TEXT,
-        UNIQUE(enrollment_id, exam_type)
+        remarks        TEXT
     );
 
     -- =============================================

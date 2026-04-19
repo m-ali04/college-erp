@@ -2,34 +2,20 @@
 {% block title %}My Attendance — College ERP{% endblock %}
 {% block page_title %}Attendance Summary{% endblock %}
 {% block content %}
-{% if attendance_data %}
 <div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-calendar-check"></i> Attendance Per Course</h2></div>
-    <div class="table-container">
-        <table>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 class="card-title"><i class="fas fa-calendar-check"></i> Attendance Per Course</h2>
+        <div class="search-box" style="display: flex; gap: 10px;">
+            <input type="text" id="search-input" class="form-control" placeholder="Search code, name..." style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+            <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </div>
+    <div class="table-container" id="infinite-scroll-container" data-url="{{ url_for('student.attendance') }}" style="max-height: 600px; overflow-y: auto;">
+        <table style="width: 100%;">
             <thead><tr><th>Course</th><th>Present</th><th>Late</th><th>Absent</th><th>Total</th><th>Rate</th><th>Progress</th></tr></thead>
-            <tbody>
-            {% for d in attendance_data %}
-            {% set pct = ((d.present_count / d.total_classes) * 100)|round(1) if d.total_classes else 0 %}
-            <tr>
-                <td><strong>{{ d.course_code }}</strong><br><small class="text-muted">{{ d.course_name }}</small></td>
-                <td><span class="badge badge-present">{{ d.present_count }}</span></td>
-                <td><span class="badge badge-late">{{ d.late_count }}</span></td>
-                <td><span class="badge badge-absent">{{ d.absent_count }}</span></td>
-                <td>{{ d.total_classes }}</td>
-                <td><strong>{{ pct }}%</strong></td>
-                <td style="min-width:120px">
-                    <div class="progress-bar">
-                        <div class="progress-fill {% if pct >= 75 %}success{% elif pct >= 50 %}warning{% else %}danger{% endif %}" style="width:{{ pct }}%"></div>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
+            <tbody id="infinite-table-body">
             </tbody>
         </table>
     </div>
 </div>
-{% else %}
-<div class="card"><div class="empty-state"><i class="fas fa-calendar"></i><p>No attendance records found.</p></div></div>
-{% endif %}
 {% endblock %}

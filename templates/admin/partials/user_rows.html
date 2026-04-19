@@ -1,0 +1,15 @@
+{% for u in users %}
+<tr>
+    <td>{{ u.user_id }}</td>
+    <td><strong>{{ u.full_name }}</strong></td>
+    <td>{{ u.email }}</td>
+    <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+    <td>
+        {% if u.role == 'student' and u.roll_no %}Roll: {{ u.roll_no }} | {{ u.student_dept or '—' }}
+        {% elif u.role == 'teacher' and u.employee_code %}Code: {{ u.employee_code }} | {{ u.designation or '—' }}
+        {% else %}—{% endif %}
+    </td>
+    <td>{{ u.created_at.strftime('%b %d, %Y') }}</td>
+    <td><a href="{{ url_for('admin.edit_user', user_id=u.user_id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i> Edit</a></td>
+</tr>
+{% endfor %}

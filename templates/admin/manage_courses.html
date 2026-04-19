@@ -17,27 +17,17 @@
 </div>
 
 <div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-book"></i> All Courses ({{ courses|length }})</h2></div>
-    <div class="table-container">
-        <table>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 class="card-title"><i class="fas fa-book"></i> All Courses</h2>
+        <div class="search-box" style="display: flex; gap: 10px;">
+            <input type="text" id="search-input" class="form-control" placeholder="Search code, name..." style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+            <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </div>
+    <div class="table-container" id="infinite-scroll-container" data-url="{{ url_for('admin.manage_courses') }}" style="max-height: 600px; overflow-y: auto;">
+        <table style="width: 100%;">
             <thead><tr><th>Code</th><th>Name</th><th>Credits</th><th>Department</th><th>Actions</th></tr></thead>
-            <tbody>
-            {% for c in courses %}
-            <tr>
-                <td><strong>{{ c.course_code }}</strong></td>
-                <td>{{ c.course_name }}</td>
-                <td>{{ c.credit_hours }}</td>
-                <td>{{ c.department or '—' }}</td>
-                <td>
-                    <form method="POST" action="{{ url_for('admin.edit_course', course_id=c.course_id) }}" style="display:inline">
-                        <input type="hidden" name="course_code" value="{{ c.course_code }}">
-                        <input type="hidden" name="course_name" value="{{ c.course_name }}">
-                        <input type="hidden" name="credit_hours" value="{{ c.credit_hours }}">
-                        <input type="hidden" name="department" value="{{ c.department or '' }}">
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
+            <tbody id="infinite-table-body">
             </tbody>
         </table>
     </div>

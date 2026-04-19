@@ -32,39 +32,17 @@
 </div>
 
 <div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> All Fee Records ({{ fees|length }})</h2></div>
-    <div class="table-container">
-        <table>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 class="card-title"><i class="fas fa-list"></i> All Fee Records</h2>
+        <div class="search-box" style="display: flex; gap: 10px;">
+            <input type="text" id="search-input" class="form-control" placeholder="Search student, roll, or fee type..." style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+            <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </div>
+    <div class="table-container" id="infinite-scroll-container" data-url="{{ url_for('admin.manage_fees') }}" style="max-height: 600px; overflow-y: auto;">
+        <table style="width: 100%;">
             <thead><tr><th>Student</th><th>Roll No</th><th>Fee Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-            {% for f in fees %}
-            <tr>
-                <td>{{ f.full_name }}</td>
-                <td>{{ f.roll_no or '—' }}</td>
-                <td>{{ f.fee_type }}</td>
-                <td><strong>Rs.{{ "%.2f"|format(f.amount) }}</strong></td>
-                <td>{{ f.due_date.strftime('%b %d, %Y') }}</td>
-                <td>
-                    {% if f.status == 'paid' %}
-                        <span class="badge badge-present">Paid</span>
-                    {% elif f.status == 'pending' %}
-                        <span class="badge badge-warning" style="background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)">Pending</span>
-                    {% else %}
-                        <span class="badge badge-absent">Overdue</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if f.status != 'paid' %}
-                    <form method="POST" action="{{ url_for('admin.mark_fee_paid', fee_id=f.fee_id) }}" style="display:inline">
-                        <button type="submit" class="btn btn-success btn-sm" title="Mark Paid"><i class="fas fa-check"></i></button>
-                    </form>
-                    {% endif %}
-                    <form method="POST" action="{{ url_for('admin.delete_fee', fee_id=f.fee_id) }}" style="display:inline">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this.parentElement, 'fee record')" title="Delete"><i class="fas fa-trash"></i></button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
+            <tbody id="infinite-table-body">
             </tbody>
         </table>
     </div>

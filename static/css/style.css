@@ -65,6 +65,60 @@
     --info-bg: rgba(59,130,246,.1); --info-border: rgba(59,130,246,.3);
 }
 
+/* ================================================================
+   ROLE THEMES  (override --primary palette only)
+   student  → cyan / teal
+   admin    → violet / purple   (matches the default, shown for clarity)
+   teacher  → amber / orange
+   ================================================================ */
+
+/* ── Student: cyan-teal ── */
+[data-role="student"] {
+    --primary:       #0EA5E9;
+    --primary-dark:  #0284C7;
+    --primary-light: #38BDF8;
+    --primary-glow:  rgba(14, 165, 233, 0.22);
+    --role-sidebar-accent: rgba(14, 165, 233, 0.10);
+}
+
+/* ── Admin: violet/indigo (default, explicitly stated) ── */
+[data-role="admin"] {
+    --primary:       #7C3AED;
+    --primary-dark:  #6D28D9;
+    --primary-light: #A78BFA;
+    --primary-glow:  rgba(124, 58, 237, 0.22);
+    --role-sidebar-accent: rgba(124, 58, 237, 0.10);
+}
+
+/* ── Teacher: amber/orange ── */
+[data-role="teacher"] {
+    --primary:       #F59E0B;
+    --primary-dark:  #D97706;
+    --primary-light: #FCD34D;
+    --primary-glow:  rgba(245, 158, 11, 0.22);
+    --role-sidebar-accent: rgba(245, 158, 11, 0.10);
+}
+
+/* ── Light theme + role stacking ── */
+[data-theme="light"][data-role="student"] {
+    --primary:       #0284C7;
+    --primary-dark:  #0369A1;
+    --primary-light: #0EA5E9;
+    --primary-glow:  rgba(2, 132, 199, 0.15);
+}
+[data-theme="light"][data-role="admin"] {
+    --primary:       #6D28D9;
+    --primary-dark:  #5B21B6;
+    --primary-light: #7C3AED;
+    --primary-glow:  rgba(109, 40, 217, 0.15);
+}
+[data-theme="light"][data-role="teacher"] {
+    --primary:       #D97706;
+    --primary-dark:  #B45309;
+    --primary-light: #F59E0B;
+    --primary-glow:  rgba(217, 119, 6, 0.15);
+}
+
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { font-size:16px; scroll-behavior:smooth; }
 body {
@@ -372,20 +426,283 @@ textarea { resize:vertical; min-height:80px; }
 ::-webkit-scrollbar-thumb { background:var(--border-light); border-radius:3px; }
 ::-webkit-scrollbar-thumb:hover { background:var(--text-muted); }
 
-/* ---- Responsive ---- */
+/* ---- Badge warning (missing variant) ---- */
+.badge-warning { background:var(--warning-bg); color:var(--warning); border:1px solid var(--warning-border); }
+
+/* ================================================================
+   MARKS PAGE — Category tabs
+   ================================================================ */
+
+/* Search input */
+.marks-search-input {
+    padding: .45rem .85rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: .88rem;
+    width: 220px;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.marks-search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* Tab bar container */
+.marks-tab-bar {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+}
+.marks-tab-bar::-webkit-scrollbar { display: none; }
+
+/* Individual tab buttons */
+.marks-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+.marks-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary-light);
+    background: var(--primary-glow);
+}
+.marks-tab.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 10px var(--primary-glow);
+}
+
+/* Count badge inside tab */
+.marks-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 10px;
+    font-size: .68rem;
+    font-weight: 700;
+    background: rgba(255,255,255,.2);
+    color: inherit;
+    line-height: 1;
+}
+.marks-tab.active .marks-tab-badge {
+    background: rgba(255,255,255,.25);
+    color: #fff;
+}
+.marks-tab:not(.active) .marks-tab-badge {
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media(max-width:600px) {
+    .marks-search-input { width: 140px; }
+    .marks-tab { padding: 6px 12px; font-size: .78rem; }
+}
+
+/* ================================================================
+   STUDENT DASHBOARD — compact, gradient, responsive
+   ================================================================ */
+
+/* ── Two-column grid that collapses to 1 col on small screens ── */
+.db-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+.mb-db { margin-bottom: 1rem; }
+
+/* ── Stat card gradient overlays ── */
+.db-stat-gradient { position: relative; overflow: hidden; }
+.db-stat-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    pointer-events: none;
+}
+.db-stat-blue::after  { background: linear-gradient(135deg, rgba(59,130,246,.08), transparent 60%); }
+.db-stat-green::after { background: linear-gradient(135deg, rgba(16,185,129,.08), transparent 60%); }
+.db-stat-yellow::after{ background: linear-gradient(135deg, rgba(245,158,11,.08), transparent 60%); }
+.db-stat-red::after   { background: linear-gradient(135deg, rgba(239,68,68,.08), transparent 60%); }
+
+/* ── Compact chart card ── */
+.db-chart-card { padding: 0; }
+.db-chart-card .card-header { padding: 12px 16px; margin-bottom: 0; }
+
+/* ── Card header gradient stripe ── */
+.db-card-header-gradient {
+    background: linear-gradient(90deg, rgba(99,102,241,.06), transparent);
+    border-bottom: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* ── Chart body ── */
+.db-chart-body { padding: 12px 16px; }
+
+/* ── Donut container — constrained size ── */
+.db-donut-wrap {
+    max-width: 200px;
+    max-height: 150px;
+    margin: 0 auto;
+}
+.db-donut-wrap canvas { max-height: 150px !important; }
+
+/* ── Bar chart container ── */
+.db-bar-wrap { max-height: 140px; }
+.db-bar-wrap canvas { max-height: 140px !important; }
+
+/* ── Attendance pills row ── */
+.db-att-pills {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: .8rem;
+}
+.db-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: .45rem .6rem;
+    border-radius: 10px;
+    flex: 1;
+    min-width: 50px;
+}
+.db-pill-green  { background: var(--success-bg);  border: 1px solid var(--success-border); }
+.db-pill-yellow { background: var(--warning-bg);  border: 1px solid var(--warning-border); }
+.db-pill-red    { background: var(--danger-bg);   border: 1px solid var(--danger-border);  }
+
+.db-pill-num {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.db-pill-green .db-pill-num  { color: var(--success); }
+.db-pill-yellow .db-pill-num { color: var(--warning); }
+.db-pill-red .db-pill-num    { color: var(--danger);  }
+
+.db-pill-lbl {
+    font-size: .65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ── Fee pills ── */
+.db-fee-pills {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: .8rem;
+    flex-wrap: wrap;
+}
+
+/* ── Percentage badge ── */
+.db-pct-badge {
+    font-size: .75rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+.db-pct-green  { background: var(--success-bg);  color: var(--success);  border: 1px solid var(--success-border); }
+.db-pct-yellow { background: var(--warning-bg);  color: var(--warning);  border: 1px solid var(--warning-border); }
+.db-pct-red    { background: var(--danger-bg);   color: var(--danger);   border: 1px solid var(--danger-border);  }
+
+/* ── Exam type tags ── */
+.db-exam-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-bottom: .7rem;
+}
+.db-exam-tag {
+    font-size: .72rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+.db-tag-green  { background: var(--success-bg);  color: var(--success);  border: 1px solid var(--success-border); }
+.db-tag-yellow { background: var(--warning-bg);  color: var(--warning);  border: 1px solid var(--warning-border); }
+.db-tag-red    { background: var(--danger-bg);   color: var(--danger);   border: 1px solid var(--danger-border);  }
+
+/* ── Invoice list ── */
+.db-invoice-list { margin-top: .8rem; }
+.db-invoice-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .35rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .82rem;
+}
+.db-invoice-row:last-child { border-bottom: none; }
+.db-invoice-name { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+.db-invoice-amt  { font-weight: 600; font-size: .82rem; }
+
+/* ── Course performance rows ── */
+.db-course-row { margin-bottom: .85rem; }
+.db-course-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .4rem;
+    margin-bottom: .3rem;
+    flex-wrap: wrap;
+}
+.db-course-code { font-weight: 700; font-size: .85rem; }
+.db-course-name { font-size: .75rem; color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-course-pct  { font-size: .78rem; font-weight: 700; }
+.db-progress    { height: 6px !important; }
+
+/* ── Gradient progress fills ── */
+.db-grad-fill.success { background: linear-gradient(90deg, #10b981, #34d399); }
+.db-grad-fill.warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.db-grad-fill.danger  { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+/* ── Responsive ── */
 @media(max-width:768px){
     .btn-menu{display:flex}
     .sidebar{transform:translateX(-100%)}
     .sidebar.open{transform:translateX(0)}
     .main-content{margin-left:0}
     .content-area{padding:20px 16px}
-    .stats-grid{grid-template-columns:1fr}
+    .stats-grid{grid-template-columns:repeat(2,1fr)}
     .form-grid{grid-template-columns:1fr}
     .filter-bar{flex-direction:column}
     .attendance-row{flex-direction:column;align-items:flex-start}
-    
+    .db-grid-2{grid-template-columns:1fr}
+
     .welcome-banner { flex-direction: column; text-align: center; padding: 24px 16px; gap: 16px; }
     .welcome-banner-animation { width: 140px; height: 140px; }
     .welcome-banner-text h1 { font-size: 1.8rem; }
     .welcome-banner-text p { font-size: 0.95rem; }
 }
+@media(max-width:480px){
+    .stats-grid{grid-template-columns:1fr}
+    .db-att-pills .db-pill-num { font-size: 1rem; }
+}
+

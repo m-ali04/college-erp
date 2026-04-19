@@ -1,0 +1,13 @@
+{% for m in marks_data %}
+{% set pct = ((m.obtained_marks / m.total_marks) * 100)|round(1) if m.total_marks else 0 %}
+<tr>
+    <td><strong>{{ m.course_code }}</strong><br><small class="text-muted">{{ m.course_name }}</small></td>
+    <td><span class="badge badge-teacher" style="text-transform:capitalize">{{ m.exam_type }}</span></td>
+    <td><strong>{{ m.obtained_marks }}</strong></td>
+    <td>{{ m.total_marks }}</td>
+    <td>
+        <strong style="color:{% if pct >= 80 %}var(--success){% elif pct >= 50 %}var(--warning){% else %}var(--danger){% endif %}">{{ pct }}%</strong>
+    </td>
+    <td>{{ m.remarks or '—' }}</td>
+</tr>
+{% endfor %}

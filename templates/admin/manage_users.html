@@ -58,26 +58,17 @@
 
 <!-- Users Table -->
 <div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-list"></i> All Users ({{ users|length }})</h2></div>
-    <div class="table-container">
-        <table>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 class="card-title"><i class="fas fa-list"></i> All Users</h2>
+        <div class="search-box" style="display: flex; gap: 10px;">
+            <input type="text" id="search-input" class="form-control" placeholder="Search name, email, or role..." style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+            <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+        </div>
+    </div>
+    <div class="table-container" id="infinite-scroll-container" data-url="{{ url_for('admin.manage_users') }}" style="max-height: 600px; overflow-y: auto;">
+        <table style="width: 100%;">
             <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Details</th><th>Created</th><th>Actions</th></tr></thead>
-            <tbody>
-            {% for u in users %}
-            <tr>
-                <td>{{ u.user_id }}</td>
-                <td><strong>{{ u.full_name }}</strong></td>
-                <td>{{ u.email }}</td>
-                <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
-                <td>
-                    {% if u.role == 'student' and u.roll_no %}Roll: {{ u.roll_no }} | {{ u.student_dept or '—' }}
-                    {% elif u.role == 'teacher' and u.employee_code %}Code: {{ u.employee_code }} | {{ u.designation or '—' }}
-                    {% else %}—{% endif %}
-                </td>
-                <td>{{ u.created_at.strftime('%b %d, %Y') }}</td>
-                <td><a href="{{ url_for('admin.edit_user', user_id=u.user_id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i> Edit</a></td>
-            </tr>
-            {% endfor %}
+            <tbody id="infinite-table-body">
             </tbody>
         </table>
     </div>

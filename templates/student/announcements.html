@@ -2,25 +2,17 @@
 {% block title %}Announcements — College ERP{% endblock %}
 {% block page_title %}Announcements{% endblock %}
 {% block content %}
-{% if announcements %}
 <div class="card">
-    <div class="card-header"><h2 class="card-title"><i class="fas fa-bullhorn"></i> All Announcements</h2></div>
-    <div class="announcement-list">
-        {% for a in announcements %}
-        <div class="announcement-card">
-            <div class="meta">
-                <span><i class="fas fa-user"></i> {{ a.poster_name }}</span>
-                <span><i class="fas fa-clock"></i> {{ a.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
-                {% if a.course_code %}<span class="course-tag"><i class="fas fa-book"></i> {{ a.course_code }}</span>
-                {% else %}<span class="course-tag"><i class="fas fa-globe"></i> System-wide</span>{% endif %}
-            </div>
-            <h3>{{ a.title }}</h3>
-            <p class="body">{{ a.body }}</p>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 class="card-title"><i class="fas fa-bullhorn"></i> All Announcements</h2>
+        <div class="search-box" style="display: flex; gap: 10px;">
+            <input type="text" id="search-input" class="form-control" placeholder="Search title, body..." style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+            <button id="search-btn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
         </div>
-        {% endfor %}
+    </div>
+    <div class="announcement-list" id="infinite-scroll-container" data-url="{{ url_for('student.announcements') }}" style="max-height: 600px; overflow-y: auto;">
+        <div id="infinite-table-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        </div>
     </div>
 </div>
-{% else %}
-<div class="card"><div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements to display.</p></div></div>
-{% endif %}
 {% endblock %}

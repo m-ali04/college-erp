@@ -1,0 +1,11 @@
+{% for c in courses %}
+<tr>
+    <td><strong>{{ c.course_code }}</strong></td>
+    <td>{{ c.course_name }}</td>
+    <td>{{ c.credit_hours }}</td>
+    <td>{{ c.department or '—' }}</td>
+    <td>{{ c.teacher_name or '—' }}</td>
+    <td>{{ c.semester }}</td>
+    <td>{{ c.academic_year }}</td>
+</tr>
+{% endfor %}

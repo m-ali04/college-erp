@@ -1,0 +1,17 @@
+{% for c in courses %}
+<tr>
+    <td><strong>{{ c.course_code }}</strong></td>
+    <td>{{ c.course_name }}</td>
+    <td>{{ c.credit_hours }}</td>
+    <td>{{ c.department or '—' }}</td>
+    <td>
+        <!-- Preserved the existing code for compatibility -->
+        <form method="POST" action="{{ url_for('admin.edit_course', course_id=c.course_id) }}" style="display:inline">
+            <input type="hidden" name="course_code" value="{{ c.course_code }}">
+            <input type="hidden" name="course_name" value="{{ c.course_name }}">
+            <input type="hidden" name="credit_hours" value="{{ c.credit_hours }}">
+            <input type="hidden" name="department" value="{{ c.department or '' }}">
+        </form>
+    </td>
+</tr>
+{% endfor %}
