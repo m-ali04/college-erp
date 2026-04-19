@@ -42,7 +42,7 @@
                 <td>{{ f.full_name }}</td>
                 <td>{{ f.roll_no or '—' }}</td>
                 <td>{{ f.fee_type }}</td>
-                <td><strong>${{ "%.2f"|format(f.amount) }}</strong></td>
+                <td><strong>Rs.{{ "%.2f"|format(f.amount) }}</strong></td>
                 <td>{{ f.due_date.strftime('%b %d, %Y') }}</td>
                 <td>
                     {% if f.status == 'paid' %}
