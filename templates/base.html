@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="College ERP — Learning Management System">
     <title>{% block title %}College ERP{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='erp_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,7 +22,7 @@
     <!-- ======== Sidebar ======== -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="logo"><i class="fas fa-graduation-cap"></i><span>College ERP</span></div>
+            <div class="logo"><img src="../static/erp_logo.png" alt="" width="40px"></i><span>Casanova</span></div>
         </div>
         <nav class="sidebar-nav">
             {% set ep = request.endpoint %}

@@ -158,7 +158,7 @@ button,input,select,textarea { font-family:inherit; font-size:inherit; color:inh
 }
 .login-header { text-align:center; margin-bottom:36px; }
 .login-logo {
-    width:60px; height:60px; background:linear-gradient(135deg,var(--primary),var(--primary-light));
+    width:60px; height:60px; background:linear-gradient(135deg,white,var(--primary-light));
     border-radius:16px; display:inline-flex; align-items:center; justify-content:center;
     font-size:28px; color:#fff; margin-bottom:16px; box-shadow:0 4px 16px var(--primary-glow);
 }
@@ -628,9 +628,9 @@ textarea { resize:vertical; min-height:80px; }
     padding: 3px 9px;
     border-radius: 20px;
 }
-.db-pct-green  { background: var(--success-bg);  color: var(--success);  border: 1px solid var(--success-border); }
-.db-pct-yellow { background: var(--warning-bg);  color: var(--warning);  border: 1px solid var(--warning-border); }
-.db-pct-red    { background: var(--danger-bg);   color: var(--danger);   border: 1px solid var(--danger-border);  }
+.db-pct-green  {  color: var(--success);  border: 0px solid var(--success-border); }
+.db-pct-yellow {   color: var(--warning);  border: 0px solid var(--warning-border); }
+.db-pct-red    {    color: var(--danger);   border: 0px solid var(--danger-border);  }
 
 /* ── Exam type tags ── */
 .db-exam-pills {
