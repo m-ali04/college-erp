@@ -9,7 +9,7 @@
         <div class="form-grid">
             <div class="form-group">
                 <label>Student *</label>
-                <select name="student_id" required>
+                <select name="student_id" class="searchable" required>
                     <option value="">Select Student</option>
                     {% for s in students %}<option value="{{ s.student_id }}">{{ s.roll_no or 'N/A' }} — {{ s.full_name }}</option>{% endfor %}
                 </select>

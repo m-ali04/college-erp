@@ -9,14 +9,14 @@
         <div class="form-grid">
             <div class="form-group">
                 <label>Teacher *</label>
-                <select name="teacher_id" required>
+                <select name="teacher_id" class="searchable" required>
                     <option value="">Select Teacher</option>
                     {% for t in teachers %}<option value="{{ t.teacher_id }}">{{ t.employee_code or 'N/A' }} — {{ t.full_name }}</option>{% endfor %}
                 </select>
             </div>
             <div class="form-group">
                 <label>Course *</label>
-                <select name="course_id" required>
+                <select name="course_id" class="searchable" required>
                     <option value="">Select Course</option>
                     {% for c in courses %}<option value="{{ c.course_id }}">{{ c.course_code }} — {{ c.course_name }}</option>{% endfor %}
                 </select>
