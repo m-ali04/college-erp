@@ -53,10 +53,10 @@
         <span id="marks-strip-text" style="font-size:.85rem;color:var(--text-muted)"></span>
     </div>
 
-    <!-- ── Table with infinite scroll ── -->
-    <div class="table-container" id="infinite-scroll-container"
+    <!-- ── Table with scrollbar (isolated from global scripts) ── -->
+    <div class="table-container" id="marks-scroll-container"
          data-url="{{ url_for('student.marks') }}"
-         style="max-height:560px;overflow-y:auto">
+         style="max-height:560px;overflow-y:auto;overflow-x:hidden">
         <table style="width:100%">
             <thead>
                 <tr>
@@ -68,7 +68,7 @@
                     <th>Remarks</th>
                 </tr>
             </thead>
-            <tbody id="infinite-table-body"></tbody>
+            <tbody id="marks-table-body"></tbody>
         </table>
     </div>
 
@@ -80,8 +80,8 @@
 <script>
 (function () {
     /* ─── state ─── */
-    const container   = document.getElementById('infinite-scroll-container');
-    const tbody       = document.getElementById('infinite-table-body');
+    const container   = document.getElementById('marks-scroll-container');
+    const tbody       = document.getElementById('marks-table-body');
     const searchInput = document.getElementById('search-input');
     const searchBtn   = document.getElementById('search-btn');
     const summaryStrip = document.getElementById('marks-summary-strip');
@@ -89,70 +89,98 @@
     const dataUrl     = container.getAttribute('data-url');
     const tabs        = document.querySelectorAll('.marks-tab');
 
-    let offset = 0, limit = 20;
     let currentQ = '', currentType = '';
-    let isLoading = false, hasMore = true;
+    let isLoading = false;
+    let abortController = null;
 
     /* ─── helpers ─── */
     function showMsg(html) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px">${html}</td></tr>`;
     }
 
-    function load(reset = false) {
-        if (isLoading || (!hasMore && !reset)) return;
-        isLoading = true;
-        if (reset) { offset = 0; hasMore = true; showMsg('<i class="fas fa-spinner fa-spin"></i> Loading...'); }
+    function updateSummary(totalCount) {
+        let label = 'All Marks';
+        const activeTab = document.querySelector('.marks-tab.active');
+        if (activeTab) {
+            // Extract text node after the icon
+            const nodes = activeTab.childNodes;
+            for(let node of nodes) {
+                if (node.nodeType === 3 && node.textContent.trim()) {
+                    label = node.textContent.trim();
+                    break;
+                }
+            }
+        }
 
+        let text = `Showing: <strong>${label}</strong>`;
+        if (currentQ) text += ` matching "<strong>${currentQ}</strong>"`;
+        text += ` — <strong>${totalCount}</strong> result${totalCount === 1 ? '' : 's'} found`;
+        
+        summaryText.innerHTML = text;
+        summaryStrip.style.display = (currentType || currentQ) ? 'block' : 'none';
+    }
+
+    function load() {
+        // Abort previous request if user switched filters fast
+        if (abortController) {
+            abortController.abort();
+            isLoading = false;
+        }
+
+        isLoading = true;
+        showMsg('<i class="fas fa-spinner fa-spin"></i> Loading data...'); 
+
+        abortController = new AbortController();
         const url = new URL(dataUrl, location.origin);
         url.searchParams.set('ajax', '1');
         url.searchParams.set('q',    currentQ);
         url.searchParams.set('exam_type', currentType);
-        url.searchParams.set('offset', offset);
-        url.searchParams.set('limit',  limit);
 
-        fetch(url)
+        fetch(url, { signal: abortController.signal })
             .then(r => r.json())
             .then(d => {
-                if (reset) tbody.innerHTML = '';
-                if (d.count < limit) hasMore = false;
-                offset += d.count;
-                if (d.html) tbody.insertAdjacentHTML('beforeend', d.html);
-                if (d.count === 0 && reset) showMsg('No marks found.');
+                tbody.innerHTML = d.html || '';
+                
+                if (!d.count || d.count === 0) {
+                    showMsg('No marks found matching your criteria.');
+                }
+
+                updateSummary(d.total_filtered || d.count || 0);
                 isLoading = false;
+                abortController = null;
             })
-            .catch(() => { if (reset) showMsg('Error loading marks.'); isLoading = false; });
+            .catch(err => { 
+                if (err.name === 'AbortError') return; 
+                console.error(err);
+                showMsg('<span style="color:var(--danger)">Error loading marks. Please try again.</span>'); 
+                isLoading = false; 
+                abortController = null;
+            });
     }
 
     /* ─── tab switching ─── */
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
+            if (isLoading && tab.classList.contains('active')) return;
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            currentType = tab.dataset.type;
-
-            // update summary strip
-            const label = tab.textContent.trim().split(/\s+/)[1] || 'All';
-            if (currentType) {
-                summaryStrip.style.display = 'block';
-                summaryText.textContent = `Showing: ${label}`;
-            } else {
-                summaryStrip.style.display = 'none';
-            }
-            load(true);
+            currentType = tab.dataset.type || '';
+            load();
         });
     });
 
     /* ─── search ─── */
-    searchBtn.addEventListener('click', () => { currentQ = searchInput.value.trim(); load(true); });
-    searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') { currentQ = searchInput.value.trim(); load(true); } });
-
-    /* ─── infinite scroll ─── */
-    container.addEventListener('scroll', () => {
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 60) load(false);
-    });
+    const handleSearch = () => { 
+        const newQ = searchInput.value.trim();
+        if (newQ === currentQ) return; 
+        currentQ = newQ; 
+        load(); 
+    };
+    searchBtn.addEventListener('click', handleSearch);
+    searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') handleSearch(); });
 
     /* ─── initial load ─── */
-    load(true);
+    load();
 })();
 </script>
 {% endblock %}

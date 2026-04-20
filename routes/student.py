@@ -227,18 +227,13 @@ def marks():
         like_q = f"%{search_query}%"
         params.extend([like_q, like_q])
 
-    # Map friendly tab names → DB values (partial match so "midterm" matches "mid", "finals" matches "final" etc.)
-    EXAM_TYPE_MAP = {
-        'quiz':       'quiz',
-        'assignment': 'assignment',
-        'midterm':    'mid',
-        'final':      'final',
-    }
-    if exam_type and exam_type in EXAM_TYPE_MAP:
-        conditions.append("m.exam_type ILIKE %s")
-        params.append(f"%{EXAM_TYPE_MAP[exam_type]}%")
+    # Allowed exam types based on schema CHECK constraint
+    VALID_EXAM_TYPES = ('midterm', 'final', 'quiz', 'assignment')
+    if exam_type in VALID_EXAM_TYPES:
+        conditions.append("m.exam_type = %s")
+        params.append(exam_type)
 
-    where_extra = ("AND " + " AND ".join(conditions)) if conditions else ""
+    where_extra = (" AND ".join([""] + conditions)) if conditions else ""
 
     query = f"""
         SELECT c.course_code, c.course_name,
@@ -248,15 +243,17 @@ def marks():
         JOIN courses c     ON e.course_id     = c.course_id
         WHERE e.student_id = %s {where_extra}
         ORDER BY c.course_code, m.exam_type
-        LIMIT %s OFFSET %s
     """
-    params.extend([limit, offset])
 
     data = execute_query(query, tuple(params), fetch=True)
 
     if is_ajax:
+        # Get total filtered count for better UI feedback
+        count_query = f"SELECT COUNT(*) as total FROM marks m JOIN enrollments e ON m.enrollment_id = e.enrollment_id JOIN courses c ON e.course_id = c.course_id WHERE e.student_id = %s {where_extra}"
+        total_filtered = execute_query(count_query, tuple(params), fetchone=True)['total']
+        
         html = render_template('student/partials/marks_rows.html', marks_data=data)
-        return {"html": html, "count": len(data)}
+        return {"html": html, "count": len(data), "total_filtered": total_filtered}
 
     # Summary stats per exam type for the header badges
     summary = execute_query("""
